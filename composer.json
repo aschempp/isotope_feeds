@@ -19,7 +19,7 @@
   "autoload": {
     "psr-0": {
         "Rhyme\\": [
-          "system/modules/isotope_feeds/library"
+          "library/"
         ]
     }
   },
