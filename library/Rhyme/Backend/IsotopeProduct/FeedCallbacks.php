@@ -31,17 +31,18 @@ class FeedCallbacks extends \Backend
 	{
 		parent::__construct();
 		$this->import('Contao\BackendUser', 'User');
+        $this->import('Rhyme\IsotopeFeeds', 'IsotopeFeeds');
 	}
 
 	/**
-	 * Check whether the required Google info has been submitted, 
+	 * Check whether the required Google info has been submitted,
 	 * @param mixed
 	 * @param Contao\DataContainer
 	 * @return string
 	 */
 	public function checkGoogle($varValue, \DataContainer $dc)
 	{
-		// Check whether the required Google info has been submitted, 
+		// Check whether the required Google info has been submitted,
 		// but we don't want to require if it is not set to be a feed product
 		if ($dc->activeRecord->useFeed && !strlen($varValue))
 		{
@@ -63,19 +64,18 @@ class FeedCallbacks extends \Backend
 		{
 			$objFeeds = \System::importStatic('Rhyme\IsotopeFeeds');
 			$objFeeds->generateFeeds();
-			
+
 			\Controller::redirect(str_replace('&act=generateFeeds', '', \Environment::get('request')));
 		}
 	}
 
 	/**
 	 * Cache the product XML for each store config
-	 * @param $id
+	 * @param \DataContainer $dc
 	 */
-	public function cacheProduct($id)
+	public function cacheProduct($dc)
 	{
-		$this->import('Rhyme\IsotopeFeeds', 'IsotopeFeeds');
-		$this->IsotopeFeeds->cacheProduct($id);
+		$this->IsotopeFeeds->cacheProduct($dc->id);
 	}
 
 	/**
@@ -87,16 +87,16 @@ class FeedCallbacks extends \Backend
 	{
 		if ($dc instanceof \DataContainer)
 		{
-			$this->cacheProduct($dc->id);
+            $this->IsotopeFeeds->cacheProduct($dc->id);
 		}
 		else if (strlen(\Input::get('tid')))
 		{
-			$this->cacheProduct(\Input::get('tid'));
+            $this->IsotopeFeeds->cacheProduct(\Input::get('tid'));
 		}
 
 		return $varValue;
 	}
-	
+
 	/**
 	 * Generate full feed files
 	 * @param mixed
