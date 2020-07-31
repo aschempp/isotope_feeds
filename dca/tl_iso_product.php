@@ -20,12 +20,12 @@ $GLOBALS['TL_DCA']['tl_iso_product']['config']['ondelete_callback'][] = array('R
 /**
  * Global operations
  */
-$GLOBALS['TL_DCA']['tl_iso_product']['list' ]['global_operations']['cache_feeds'] = array
-(
-	'label'				=> &$GLOBALS['TL_LANG']['tl_iso_product']['cache_feeds'],
-	'button_callback'	=> array('Rhyme\Backend\IsotopeProduct\FeedCallbacks', 'cacheButton'),
-	'attributes'		=> 'onclick="Backend.getScrollOffset();"',
-);
+//$GLOBALS['TL_DCA']['tl_iso_product']['list' ]['global_operations']['cache_feeds'] = array
+//(
+//	'label'				=> &$GLOBALS['TL_LANG']['tl_iso_product']['cache_feeds'],
+//	'button_callback'	=> array('Rhyme\Backend\IsotopeProduct\FeedCallbacks', 'cacheButton'),
+//	'attributes'		=> 'onclick="Backend.getScrollOffset();"',
+//);
 
 $GLOBALS['TL_DCA']['tl_iso_product']['list' ]['global_operations']['generate_feeds'] = array
 (
