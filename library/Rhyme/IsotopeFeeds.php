@@ -12,6 +12,8 @@
 
 namespace Rhyme;
 
+use Contao\StringUtil;
+use Contao\System;
 use Isotope\Model\Config as IsoConfig;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Model\Product;
@@ -101,14 +103,23 @@ class IsotopeFeeds extends \Controller
 	 */
 	public static function getFeedFiles($objConfig)
 	{
-    	if(!is_array(static::$arrFeedCache[$objConfig->id]))
-    	{
+        if(!is_array(static::$arrFeedCache[$objConfig->id]))
+        {
+            $shareDir = 'share/';
+            if (method_exists(System::class, 'getContainer')) {
+                if (method_exists(StringUtil::class, 'stripRootDir')) {
+                    $shareDir = StringUtil::stripRootDir(System::getContainer()->getParameter('contao.web_dir')).'/share/';
+                } else {
+                    $shareDir = 'web/share/';
+                }
+            }
+
         	static::$arrFeedCache[$objConfig->id] = array();
         	$strBase = static::getFeedBaseName($objConfig);
         	$arrTypes = deserialize($objConfig->feedTypes, true);
         	foreach($arrTypes as $feedType)
             {
-                $strFile = 'share/' . $strBase . '-' . $feedType . '.xml';
+                $strFile = $shareDir . $strBase . '-' . $feedType . '.xml';
                 static::$arrFeedCache[$objConfig->id][$feedType] = $strFile;
             }
         }
@@ -186,8 +197,8 @@ class IsotopeFeeds extends \Controller
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Cache the product XML for each store config
 	 * @param Isotope\Interfaces\IsotopeProduct
@@ -243,13 +254,13 @@ class IsotopeFeeds extends \Controller
 		$objFeed->description = $objConfig->feedDesc;
 		$objFeed->language = $objConfig->language;
 		$objFeed->published = time();
-		
+
 		$strDir = static::getFeedCacheBaseDir($objConfig) . '/' . $strType;
-		
+
 		if(is_dir(TL_ROOT . '/' .  $strDir))
 		{
 			$arrFiles = scan(TL_ROOT . '/' .  $strDir);
-			
+
 			//HOOK for other data that needs to be added and sorting the array
 			if (isset($GLOBALS['ISO_HOOKS']['feedFiles']) && is_array($GLOBALS['ISO_HOOKS']['feedFiles']))
 			{
@@ -259,7 +270,7 @@ class IsotopeFeeds extends \Controller
 					$arrFiles = $this->{$callback[0]}->{$callback[1]}($arrFiles, $strType, $objFeed, $objConfig);
 				}
 			}
-			
+
 			foreach($arrFiles as $file)
 			{
 				if(is_file(TL_ROOT  . '/' . $strDir . '/' . $file))
@@ -268,7 +279,7 @@ class IsotopeFeeds extends \Controller
 					$objFeed->addFile($objFile);
 				}
 			}
-			
+
 			// Create file
 			$objFeedFile = new \File($strFile);
 			$objFeedFile->write($this->replaceInsertTags($objFeed->{$arrType[1]}()));
@@ -289,7 +300,7 @@ class IsotopeFeeds extends \Controller
 		$arrFeedClass = $GLOBALS['ISO_FEEDS'][$strType];
 		$strLink = $objConfig->feedBase != '' ? $objConfig->feedBase : \Environment::get('base');
 		$strCacheFile = 'isotope/cache/' . $objConfig->id . '/' .  $strType . '/' . $objProduct->alias . ($objProduct->pid > 0 ? '-' . $objProduct->id : '') . '.xml';
-		
+
 		// Get root pages that belong to this store config.
 		$arrPages = array();
 		$objRoot = \PageModel::findBy(array("type='root'", "iso_config"), $objConfig->id);
@@ -311,7 +322,7 @@ class IsotopeFeeds extends \Controller
 				$intJumpTo = $objModules->iso_reader_jumpTo;
 			}
 		}
-		
+
 		if($objProduct->isPublished() && $objProduct->useFeed)
 		{
 			//Check for variants and run them instead if they exist
@@ -322,12 +333,12 @@ class IsotopeFeeds extends \Controller
 					$objVariant = Product::findPublishedByPk($variantID);
 					$this->generateProductXML($feedFile, $objVariant, $objConfig);
 				}
-				
+
 				//Do not run the parent and delete the cache file if it exists
 				\Files::getInstance()->delete($strCacheFile);
 				return;
 			}
-			
+
 			try
 			{
 				$objItem = new $GLOBALS['ISO_FEEDS'][$strType]['item']();
@@ -368,16 +379,16 @@ class IsotopeFeeds extends \Controller
 			$objItem->gtin = $objProduct->gid_gtin;
 			$objItem->mpn = $objProduct->gid_mpn;
 			$objItem->google_product_category = (($objGT = GoogleTaxonomy::findByPk($objProduct->gid_google_product_category))==false ) ? '' : $objGT->fullname;
-			
+
 			//Google variants only
 			if($objProduct->pid>0)
 			{
 				$objItem->item_group_id = strlen($objProduct->sku) ? $objProduct->sku : $objProduct->alias;
 			}
-			
+
 			//Custom product category taxomony
 			$objItem->product_type = deserialize($objProduct->gid_product_type);
-			
+
 			//HOOK for other data that needs to be added
 			if (isset($GLOBALS['ISO_HOOKS']['feedItem']) && is_array($GLOBALS['ISO_HOOKS']['feedItem']))
 			{
@@ -401,7 +412,7 @@ class IsotopeFeeds extends \Controller
 					$objItem->additional_image_link = $arrImages;
 				}
 			}
-			
+
 			//Cache the file
 			$objItem->cache($strCacheFile);
 		}
